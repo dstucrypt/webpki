@@ -161,6 +161,11 @@ fn remember_extension<'a>(cert: &mut Cert<'a>, extn_id: untrusted::Input,
 
     // id-ce 2.5.29
     static ID_CE: [u8; 2] = oid![2, 5, 29];
+    static ID_QC: [u8; 8] = oid![1, 3, 6, 1, 5, 5, 7, 1, 3];
+
+    if extn_id.as_slice_less_safe().eq(&ID_QC) {
+        return Ok(Understood::Yes);
+    }
 
     if extn_id.len() != ID_CE.len() + 1 ||
        !extn_id.as_slice_less_safe().starts_with(&ID_CE) {
@@ -175,6 +180,9 @@ fn remember_extension<'a>(cert: &mut Cert<'a>, extn_id: untrusted::Input,
         // the keyEncipherment bit could not be used for RSA key exchange.
         15 => { return Ok(Understood::Yes); },
 
+        // id-ce-certificatePolicies 2.5.29.32
+        // Yes, it is critical
+        32 =>  { return Ok(Understood::Yes); },
         // id-ce-subjectAltName 2.5.29.17
         17 => &mut cert.subject_alt_name,
 

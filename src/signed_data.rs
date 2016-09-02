@@ -203,6 +203,10 @@ fn parse_spki_value(input: untrusted::Input)
                 let curve_oid =
                     try!(der::expect_tag_and_get_value(input, der::Tag::OID));
                 Some(curve_oid)
+            } else if input.peek(der::Tag::Sequence as u8) {
+                // 4145, hello my friend
+                try!(der::expect_tag_and_get_value(input, der::Tag::Sequence));
+                None
             } else {
                 try!(der::null(input));
                 None
@@ -288,6 +292,12 @@ pub static ECDSA_P384_SHA512: SignatureAlgorithm = SignatureAlgorithm {
     verification_alg: &signature::ECDSA_P384_SHA512_ASN1,
 };
 
+/// DSTU4145 signature with GOST hashsum.
+pub static DSTU4145_GOST34311_95 : SignatureAlgorithm = SignatureAlgorithm {
+    signature_alg_oids: &[DSTU4145_GOST34311_95_OID],
+    public_key_alg: &DSTU4145,
+    verification_alg: &signature::SIGNATURE_DSTU4145_GOST34311_95,
+};
 
 /// RSA PKCS#1 1.5 signatures using SHA-1 for keys of 2048-8192 bits.
 /// Deprecated.
@@ -341,6 +351,11 @@ static ECDSA_P384: PublicKeyAlgorithm = PublicKeyAlgorithm {
     curve_oid: Some(&oid_1_3_132![0, 34]),
 };
 
+static DSTU4145: PublicKeyAlgorithm = PublicKeyAlgorithm {
+    shared: &DSTU_SHARED,
+    curve_oid: None,
+};
+
 // RFC 3279 Section 2.3.1 says "The parameters field MUST have ASN.1 type
 // NULL for this algorithm identifier."
 static RSA_PKCS1: PublicKeyAlgorithm = PublicKeyAlgorithm {
@@ -370,6 +385,12 @@ const ECDSA_SHARED: PublicKeyAlgorithmSharedInfo = PublicKeyAlgorithmSharedInfo 
     allowed_signature_alg_parameters: &[&[]],
 };
 
+// id-dstu4145
+const DSTU_SHARED: PublicKeyAlgorithmSharedInfo = PublicKeyAlgorithmSharedInfo {
+    spki_algorithm_oid: &oid![1, 2, 134, 36, 2, 1, 1, 1, 1, 3, 1, 1],
+    allowed_signature_alg_parameters: &[&[]],
+};
+
 const RSA_PKCS1_SHARED: PublicKeyAlgorithmSharedInfo =
         PublicKeyAlgorithmSharedInfo {
     spki_algorithm_oid: &oid_1_2_840_113549![1, 1, 1],
@@ -387,6 +408,7 @@ const ECDSA_SHA1_OID: &'static [u8] = &oid_1_2_840_10045![4, 1, 1];
 const ECDSA_SHA256_OID: &'static [u8] = &oid_1_2_840_10045![4, 3, 2];
 const ECDSA_SHA384_OID: &'static [u8] = &oid_1_2_840_10045![4, 3, 3];
 const ECDSA_SHA512_OID: &'static [u8] = &oid_1_2_840_10045![4, 3, 4];
+const DSTU4145_GOST34311_95_OID: &'static [u8] = &oid![1, 2, 134, 36, 2, 1, 1, 1, 1, 3, 1, 1];
 
 const RSA_PKCS1_SHA1_OID: &'static [u8] = &oid_1_2_840_113549![1, 1, 5];
 const RSA_PKCS1_SHA256_OID: &'static [u8] = &oid_1_2_840_113549![1, 1, 11];
